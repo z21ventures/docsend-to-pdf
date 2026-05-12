@@ -1,0 +1,4 @@
+flask
+playwright
+img2pdf
+pillow

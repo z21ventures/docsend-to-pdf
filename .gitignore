@@ -1,0 +1,6 @@
+slides/
+__pycache__/
+*.pyc
+*.pyo
+.env
+*.pdf
