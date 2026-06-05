@@ -7,7 +7,7 @@ from pathlib import Path
 import img2pdf
 from flask import Flask, render_template, request, send_file
 
-from docsend_scraper import DocSendScraper
+from docsend_scraper import DocSendScraper, safe_filename
 
 app = Flask(__name__)
 
@@ -21,6 +21,7 @@ def index():
 def scrape():
     url = request.form.get("url", "").strip()
     email = request.form.get("email", "").strip()
+    custom_name = request.form.get("filename", "").strip()
 
     if not url.startswith("http"):
         return "Invalid URL — must start with https://", 400
@@ -46,14 +47,22 @@ def scrape():
         except Exception as e:
             return f"PDF generation failed: {e}", 500
 
+    # Filename priority: user's choice → detected deck title → "deck"
+    download_name = safe_filename(custom_name or scraper.deck_title or "deck") + ".pdf"
+
     buf = io.BytesIO(pdf_bytes)
     buf.seek(0)
-    return send_file(
+    resp = send_file(
         buf,
         as_attachment=True,
-        download_name="deck.pdf",
+        download_name=download_name,
         mimetype="application/pdf",
     )
+    # The browser downloads via fetch+blob, which ignores Content-Disposition,
+    # so expose the chosen name in a custom header the front-end can read.
+    resp.headers["X-Download-Filename"] = download_name
+    resp.headers["Access-Control-Expose-Headers"] = "X-Download-Filename"
+    return resp
 
 
 if __name__ == "__main__":
