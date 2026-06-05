@@ -92,6 +92,12 @@
         placeholder="you@company.com"
       />
 
+      <label for="filename">File name <span class="optional">(optional — defaults to the deck's title)</span></label>
+      <input
+        id="filename" name="filename" type="text"
+        placeholder="e.g. Acme Seed Deck"
+      />
+
       <button type="submit" id="btn">Download PDF</button>
     </form>
 
@@ -118,12 +124,13 @@
           status.textContent = "Error: " + msg;
         } else {
           const blob = await res.blob();
+          const name = res.headers.get("X-Download-Filename") || "deck.pdf";
           const a = document.createElement("a");
           a.href = URL.createObjectURL(blob);
-          a.download = "deck.pdf";
+          a.download = name;
           a.click();
           status.className = "status loading";
-          status.innerHTML = "Done! Your PDF download should have started.";
+          status.innerHTML = "Done! Downloaded as <strong>" + name + "</strong>.";
         }
       } catch (err) {
         status.className = "status error";

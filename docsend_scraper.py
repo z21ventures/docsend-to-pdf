@@ -56,6 +56,33 @@ def _parse_counter(text: str) -> Optional[tuple[int, int]]:
     return int(m.group(3)), int(m.group(4))
 
 
+def safe_filename(name: str, default: str = "deck", max_len: int = 80) -> str:
+    """Turn an arbitrary string into a safe filename *base* (no extension).
+
+    Strips any user-typed .pdf, drops characters unsafe for filenames, and
+    collapses whitespace to underscores. Falls back to ``default`` if nothing
+    usable remains.
+    """
+    if not name:
+        return default
+    name = re.sub(r"\.pdf$", "", name.strip(), flags=re.I)
+    # Keep word chars (incl. unicode letters), spaces, dots and hyphens
+    name = re.sub(r"[^\w\s.-]", "", name, flags=re.UNICODE)
+    name = re.sub(r"\s+", "_", name.strip())
+    name = name.strip("._-")[:max_len].strip("._-")
+    return name or default
+
+
+def _clean_title(title: str) -> str:
+    """Strip DocSend boilerplate from a page title; '' if it's generic."""
+    title = re.sub(r"\s*[-|–—]\s*DocSend.*$", "", title, flags=re.I)
+    title = re.sub(r"^DocSend\s*[-|–—:]\s*", "", title, flags=re.I)
+    title = title.strip()
+    if title.lower() in {"", "docsend", "view", "document", "untitled"}:
+        return ""
+    return title
+
+
 # ── Scraper ────────────────────────────────────────────────────────────────────
 
 class DocSendScraper:
@@ -75,6 +102,8 @@ class DocSendScraper:
         self.extra_wait_ms = extra_wait_ms
 
         self.page: Optional[Page] = None
+        # Deck title detected from the page after auth (used for default naming)
+        self.deck_title: Optional[str] = None
         # Slide images intercepted from network: page_num -> bytes
         self._intercepted: dict[int, bytes] = {}
         # Accumulate all large image responses so we can match them to slides
@@ -153,6 +182,11 @@ class DocSendScraper:
         except PWTimeout:
             pass
         await page.wait_for_timeout(2_000)
+
+        # Detect the deck title for context-aware default naming
+        self.deck_title = await self._detect_title()
+        if self.deck_title:
+            print(f"Deck title: {self.deck_title}")
 
         # Detect total from the toolbar counter
         total = await self._detect_total()
@@ -317,6 +351,49 @@ class DocSendScraper:
         print(f"Email gate cleared ({email})")
 
     # ── Slide info ─────────────────────────────────────────────────────────────
+
+    async def _detect_title(self) -> Optional[str]:
+        """Best-effort deck name: DocSend doc-name element → og:title → <title>."""
+        candidates: list[str] = []
+
+        # 1. The document-name element DocSend renders in its toolbar/header
+        for sel in [
+            ".toolbar-document-name",
+            "[class*='document-name']",
+            "[class*='doc-title']",
+            "header h1",
+        ]:
+            try:
+                t = await self.page.locator(sel).first.text_content(timeout=800)
+                if t and t.strip():
+                    candidates.append(t)
+                    break
+            except Exception:
+                continue
+
+        # 2. Open Graph title meta tag
+        try:
+            og = await self.page.evaluate(
+                "() => document.querySelector('meta[property=\"og:title\"]')?.content || null"
+            )
+            if og:
+                candidates.append(og)
+        except Exception:
+            pass
+
+        # 3. The page <title>
+        try:
+            t = await self.page.title()
+            if t:
+                candidates.append(t)
+        except Exception:
+            pass
+
+        for raw in candidates:
+            cleaned = _clean_title(raw)
+            if cleaned:
+                return cleaned
+        return None
 
     async def _detect_total(self) -> Optional[int]:
         info = await self._get_counter()
