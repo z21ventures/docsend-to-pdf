@@ -3,160 +3,350 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>DocSend → PDF</title>
+  <title>DocSend → PDF · z21 Ventures</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
   <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --accent:        #CC3300;
+      --accent-hover:  #E84020;
+      --dark:          #111111;
+      --muted:         #888888;
+      --border:        #E0E0E0;
+      --bg:            #F0F0F0;
+      --card:          #FFFFFF;
+      --error-bg:      #FFF2F0;
+      --error-text:    #CC3300;
+      --success-bg:    #F0FAF4;
+      --success-text:  #1A7A40;
+    }
+
     body {
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-      background: #f5f5f5;
+      font-family: 'Inter', ui-sans-serif, system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--dark);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* ── Wordmark ── */
+    .wordmark {
+      font-size: 0.75rem;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 28px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .wordmark span {
+      display: inline-block;
+      width: 18px;
+      height: 18px;
+      background: var(--accent);
+      border-radius: 4px;
+      flex-shrink: 0;
+    }
+
+    /* ── Card ── */
+    .card {
+      background: var(--card);
+      border-radius: 16px;
+      border: 1px solid var(--border);
+      padding: 40px;
+      width: 100%;
+      max-width: 460px;
+    }
+
+    .card-header { margin-bottom: 32px; }
+    .card-header h1 {
+      font-size: 1.35rem;
+      font-weight: 700;
+      color: var(--dark);
+      letter-spacing: -0.02em;
+      margin-bottom: 6px;
+    }
+    .card-header p {
+      font-size: 0.875rem;
+      color: var(--muted);
+      line-height: 1.5;
+    }
+
+    /* ── Form ── */
+    .field { margin-bottom: 20px; }
+    label {
+      display: block;
+      font-size: 0.8125rem;
+      font-weight: 600;
+      color: var(--dark);
+      margin-bottom: 6px;
+      letter-spacing: -0.01em;
+    }
+    label .hint {
+      font-weight: 400;
+      color: var(--muted);
+    }
+
+    input[type="url"],
+    input[type="email"],
+    input[type="password"],
+    input[type="text"] {
+      width: 100%;
+      padding: 10px 14px;
+      border: 1.5px solid var(--border);
+      border-radius: 10px;
+      font-family: inherit;
+      font-size: 0.9375rem;
+      color: var(--dark);
+      background: #FAFAFA;
+      outline: none;
+      transition: border-color 0.15s, background 0.15s;
+    }
+    input::placeholder { color: #BBBBBB; }
+    input:focus {
+      border-color: var(--accent);
+      background: #FFFFFF;
+    }
+
+    /* ── Divider ── */
+    .divider {
+      height: 1px;
+      background: var(--border);
+      margin: 24px 0;
+    }
+
+    /* ── Button ── */
+    button[type="submit"] {
+      width: 100%;
+      padding: 12px 20px;
+      background: var(--accent);
+      color: #FFFFFF;
+      border: none;
+      border-radius: 10px;
+      font-family: inherit;
+      font-size: 0.9375rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.15s, transform 0.1s;
+      letter-spacing: -0.01em;
       display: flex;
       align-items: center;
       justify-content: center;
-      min-height: 100vh;
-      padding: 24px;
+      gap: 8px;
     }
-    .card {
-      background: white;
-      border-radius: 12px;
-      box-shadow: 0 2px 16px rgba(0,0,0,0.08);
-      padding: 40px;
-      width: 100%;
-      max-width: 480px;
-    }
-    h1 { font-size: 1.4rem; color: #111; margin-bottom: 6px; }
-    .subtitle { color: #666; font-size: 0.9rem; margin-bottom: 32px; }
-    label { display: block; font-size: 0.85rem; font-weight: 500; color: #333; margin-bottom: 6px; }
-    input[type="url"], input[type="email"], input[type="password"] {
-      width: 100%;
-      padding: 10px 14px;
-      border: 1px solid #ddd;
-      border-radius: 8px;
-      font-size: 0.95rem;
-      margin-bottom: 20px;
-      outline: none;
-      transition: border-color 0.2s;
-    }
-    input:focus { border-color: #4f46e5; }
-    .optional { color: #999; font-weight: 400; }
-    button {
-      width: 100%;
-      padding: 12px;
-      background: #4f46e5;
-      color: white;
-      border: none;
-      border-radius: 8px;
-      font-size: 1rem;
-      font-weight: 500;
-      cursor: pointer;
-      transition: background 0.2s;
-    }
-    button:hover { background: #4338ca; }
-    button:disabled { background: #a5b4fc; cursor: not-allowed; }
+    button[type="submit"]:hover:not(:disabled) { background: var(--accent-hover); }
+    button[type="submit"]:active:not(:disabled) { transform: scale(0.99); }
+    button[type="submit"]:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    /* ── Status bar ── */
     .status {
-      margin-top: 20px;
-      padding: 12px 16px;
-      border-radius: 8px;
-      font-size: 0.9rem;
+      margin-top: 16px;
+      padding: 12px 14px;
+      border-radius: 10px;
+      font-size: 0.875rem;
+      line-height: 1.5;
       display: none;
+      align-items: flex-start;
+      gap: 10px;
     }
-    .status.loading { background: #eff6ff; color: #1d4ed8; display: block; }
-    .status.error   { background: #fef2f2; color: #b91c1c; display: block; }
-    .error-msg {
-      background: #fef2f2;
-      color: #b91c1c;
-      padding: 10px 14px;
-      border-radius: 8px;
-      font-size: 0.9rem;
-      margin-bottom: 16px;
+    .status.loading {
+      display: flex;
+      background: #F5F5F5;
+      color: var(--dark);
+      border: 1px solid var(--border);
     }
+    .status.success {
+      display: flex;
+      background: var(--success-bg);
+      color: var(--success-text);
+      border: 1px solid #A7DDB9;
+    }
+    .status.error {
+      display: flex;
+      background: var(--error-bg);
+      color: var(--error-text);
+      border: 1px solid #F5C0B0;
+    }
+
+    /* ── Spinner ── */
     .spinner {
-      display: inline-block;
-      width: 14px; height: 14px;
-      border: 2px solid #93c5fd;
-      border-top-color: #1d4ed8;
+      flex-shrink: 0;
+      width: 16px;
+      height: 16px;
+      border: 2px solid #DDDDDD;
+      border-top-color: var(--accent);
       border-radius: 50%;
-      animation: spin 0.8s linear infinite;
-      margin-right: 8px;
-      vertical-align: middle;
+      animation: spin 0.75s linear infinite;
+      margin-top: 1px;
     }
     @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ── Error msg (access gate) ── */
+    .error-msg {
+      background: var(--error-bg);
+      color: var(--error-text);
+      border: 1px solid #F5C0B0;
+      padding: 10px 14px;
+      border-radius: 10px;
+      font-size: 0.875rem;
+      margin-bottom: 20px;
+    }
+
+    /* ── Footer ── */
+    .footer {
+      margin-top: 24px;
+      font-size: 0.75rem;
+      color: var(--muted);
+      text-align: center;
+      line-height: 1.5;
+    }
+    .footer a {
+      color: var(--muted);
+      text-decoration: underline;
+      text-underline-offset: 2px;
+    }
   </style>
 </head>
 <body>
+
+  <div class="wordmark">
+    <span></span>
+    z21 Ventures
+  </div>
+
   <div class="card">
-    <h1>DocSend → PDF</h1>
+    <div class="card-header">
+      <h1>DocSend → PDF</h1>
+      {% if not auth %}
+        <p>Internal tool — enter your access code to continue.</p>
+      {% else %}
+        <p>Paste a DocSend link to download the deck as a PDF.</p>
+      {% endif %}
+    </div>
 
     {% if not auth %}
-      <p class="subtitle">Enter the access code to continue.</p>
+      <!-- ── Access gate ── -->
       {% if error %}
         <div class="error-msg">{{ error }}</div>
       {% endif %}
       <form method="POST" action="/">
-        <label for="access_code">Access Code</label>
-        <input type="password" id="access_code" name="access_code" required autofocus
-               placeholder="Enter access code" />
+        <div class="field">
+          <label for="access_code">Access code</label>
+          <input type="password" id="access_code" name="access_code"
+                 required autofocus placeholder="••••••••" />
+        </div>
         <button type="submit">Continue</button>
       </form>
 
     {% else %}
-      <p class="subtitle">Paste a DocSend link to download it as a PDF.</p>
+      <!-- ── Main form ── -->
       <form id="form">
         <input type="hidden" name="access_code" value="{{ access_code }}" />
 
-        <label for="url">DocSend URL</label>
-        <input id="url" name="url" type="url" required
-               placeholder="https://docsend.com/view/abc123xyz" />
+        <div class="field">
+          <label for="url">DocSend URL</label>
+          <input id="url" name="url" type="url" required autofocus
+                 placeholder="https://docsend.com/view/abc123xyz" />
+        </div>
 
-        <label for="email">Email <span class="optional">(only needed for gated decks)</span></label>
-        <input id="email" name="email" type="email"
-               placeholder="you@company.com" />
+        <div class="field">
+          <label for="email">
+            Email&nbsp;<span class="hint">— only needed for gated decks</span>
+          </label>
+          <input id="email" name="email" type="email"
+                 placeholder="you@z21.ventures" />
+        </div>
 
-        <label for="filename">File name <span class="optional">(optional — defaults to the deck's title)</span></label>
-        <input id="filename" name="filename" type="text"
-               placeholder="e.g. Acme Seed Deck" />
+        <div class="divider"></div>
 
-        <button type="submit" id="btn">Download PDF</button>
+        <div class="field">
+          <label for="filename">
+            File name&nbsp;<span class="hint">— leave blank to use the deck's own title</span>
+          </label>
+          <input id="filename" name="filename" type="text"
+                 placeholder="e.g. Acme Seed Deck 2026-06" />
+        </div>
+
+        <button type="submit" id="btn">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+            <path d="M8 1v9M4.5 6.5 8 10l3.5-3.5M2 12h12" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          Download PDF
+        </button>
       </form>
-      <div class="status" id="status"></div>
 
-      <script>
-        const form = document.getElementById("form");
-        const btn  = document.getElementById("btn");
-        const status = document.getElementById("status");
+      <div class="status" id="status">
+        <div class="spinner" id="spinner"></div>
+        <span id="status-text"></span>
+      </div>
 
-        form.addEventListener("submit", async (e) => {
-          e.preventDefault();
-          btn.disabled = true;
-          btn.textContent = "Working…";
-          status.className = "status loading";
-          status.innerHTML = '<span class="spinner"></span>Capturing slides — this can take 1–2 minutes for large decks…';
-
-          try {
-            const res = await fetch("/scrape", { method: "POST", body: new FormData(form) });
-            if (!res.ok) {
-              const msg = await res.text();
-              status.className = "status error";
-              status.textContent = "Error: " + msg;
-            } else {
-              const blob = await res.blob();
-              const name = res.headers.get("X-Download-Filename") || "deck.pdf";
-              const a = document.createElement("a");
-              a.href = URL.createObjectURL(blob);
-              a.download = name;
-              a.click();
-              status.className = "status loading";
-              status.innerHTML = "Done! Downloaded as <strong>" + name + "</strong>.";
-            }
-          } catch (err) {
-            status.className = "status error";
-            status.textContent = "Request failed: " + err.message;
-          } finally {
-            btn.disabled = false;
-            btn.textContent = "Download PDF";
-          }
-        });
-      </script>
     {% endif %}
   </div>
+
+  <div class="footer">
+    Internal tool ·
+    <a href="https://github.com/z21ventures/docsend-to-pdf" target="_blank" rel="noopener">
+      z21ventures/docsend-to-pdf
+    </a>
+  </div>
+
+  {% if auth %}
+  <script>
+    const form      = document.getElementById("form");
+    const btn       = document.getElementById("btn");
+    const statusEl  = document.getElementById("status");
+    const spinner   = document.getElementById("spinner");
+    const statusTxt = document.getElementById("status-text");
+
+    const DOWNLOAD_ICON = `<svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+      <path d="M8 1v9M4.5 6.5 8 10l3.5-3.5M2 12h12" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>`;
+
+    function setStatus(type, html) {
+      statusEl.className = "status " + type;
+      statusTxt.innerHTML = html;
+      spinner.style.display = type === "loading" ? "block" : "none";
+    }
+
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      btn.disabled = true;
+      btn.innerHTML = `<div class="spinner" style="border-top-color:#fff;border-color:rgba(255,255,255,0.3);width:15px;height:15px;margin:0;"></div> Working…`;
+      setStatus("loading", "Capturing slides — this takes 30–90 seconds for most decks…");
+
+      try {
+        const res = await fetch("/scrape", { method: "POST", body: new FormData(form) });
+        if (!res.ok) {
+          const msg = await res.text();
+          setStatus("error", "<strong>Error:</strong> " + msg);
+        } else {
+          const blob = await res.blob();
+          const name = res.headers.get("X-Download-Filename") || "deck.pdf";
+          const a = document.createElement("a");
+          a.href = URL.createObjectURL(blob);
+          a.download = name;
+          a.click();
+          setStatus("success", "Downloaded as <strong>" + name + "</strong>");
+        }
+      } catch (err) {
+        setStatus("error", "Request failed: " + err.message);
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = DOWNLOAD_ICON + " Download PDF";
+      }
+    });
+  </script>
+  {% endif %}
+
 </body>
 </html>
