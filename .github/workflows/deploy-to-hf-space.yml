@@ -1,0 +1,83 @@
+name: Deploy to Hugging Face Space
+
+# Auto-deploys the app to the z21ventures Hugging Face Space whenever code
+# lands on main. Replaces the old manual "copy files and push" step.
+#
+# REQUIRED ONE-TIME SETUP (done by a repo admin):
+#   Settings → Secrets and variables → Actions → New repository secret
+#     Name:  HF_TOKEN
+#     Value: a Hugging Face WRITE token (huggingface.co/settings/tokens) for an
+#            account with write access to the z21ventures org.
+# Without that secret this workflow fails fast (a visible red ✗); it never
+# deploys with a missing/invalid token.
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "app.py"
+      - "docsend_scraper.py"
+      - "templates/**"
+      - "Dockerfile"
+      - "requirements.txt"
+      - ".github/workflows/deploy-to-hf-space.yml"
+  workflow_dispatch: {}   # allow manual "Run workflow" from the Actions tab
+
+concurrency:
+  group: deploy-hf-space
+  cancel-in-progress: true   # a newer push supersedes an in-flight deploy
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install huggingface_hub
+        run: pip install --upgrade "huggingface_hub>=0.25"
+
+      - name: Fail early if HF_TOKEN is missing
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+        run: |
+          if [ -z "$HF_TOKEN" ]; then
+            echo "::error::HF_TOKEN secret is not set. Add it under Settings → Secrets and variables → Actions."
+            exit 1
+          fi
+
+      - name: Sync code to the Space
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+          GIT_SHA: ${{ github.sha }}
+        run: |
+          python - <<'PY'
+          import os
+          from huggingface_hub import HfApi
+
+          api = HfApi(token=os.environ["HF_TOKEN"])
+          sha = os.environ.get("GIT_SHA", "")[:7]
+
+          # Upload code only. README.md is intentionally excluded so the Space
+          # keeps its own README (which holds the required `sdk: docker` HF
+          # config frontmatter that the GitHub README does not have).
+          api.upload_folder(
+              repo_id="z21ventures/docsend-to-pdf-new",
+              repo_type="space",
+              folder_path=".",
+              ignore_patterns=[
+                  "README.md",
+                  ".git/*",
+                  ".github/*",
+                  "**/__pycache__/*",
+                  "*.pyc",
+              ],
+              commit_message=f"Deploy from GitHub main @ {sha}",
+          )
+          print(f"Synced GitHub main @ {sha} to z21ventures/docsend-to-pdf-new")
+          PY
