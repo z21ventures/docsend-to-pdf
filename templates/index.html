@@ -26,7 +26,7 @@
     h1 { font-size: 1.4rem; color: #111; margin-bottom: 6px; }
     .subtitle { color: #666; font-size: 0.9rem; margin-bottom: 32px; }
     label { display: block; font-size: 0.85rem; font-weight: 500; color: #333; margin-bottom: 6px; }
-    input[type="url"], input[type="email"] {
+    input[type="url"], input[type="email"], input[type="password"] {
       width: 100%;
       padding: 10px 14px;
       border: 1px solid #ddd;
@@ -61,6 +61,14 @@
     }
     .status.loading { background: #eff6ff; color: #1d4ed8; display: block; }
     .status.error   { background: #fef2f2; color: #b91c1c; display: block; }
+    .error-msg {
+      background: #fef2f2;
+      color: #b91c1c;
+      padding: 10px 14px;
+      border-radius: 8px;
+      font-size: 0.9rem;
+      margin-bottom: 16px;
+    }
     .spinner {
       display: inline-block;
       width: 14px; height: 14px;
@@ -77,69 +85,78 @@
 <body>
   <div class="card">
     <h1>DocSend → PDF</h1>
-    <p class="subtitle">Paste a DocSend link to download it as a PDF.</p>
 
-    <form id="form" method="POST" action="/scrape">
-      <label for="url">DocSend URL</label>
-      <input
-        id="url" name="url" type="url" required
-        placeholder="https://docsend.com/view/abc123xyz"
-      />
+    {% if not auth %}
+      <p class="subtitle">Enter the access code to continue.</p>
+      {% if error %}
+        <div class="error-msg">{{ error }}</div>
+      {% endif %}
+      <form method="POST" action="/">
+        <label for="access_code">Access Code</label>
+        <input type="password" id="access_code" name="access_code" required autofocus
+               placeholder="Enter access code" />
+        <button type="submit">Continue</button>
+      </form>
 
-      <label for="email">Email <span class="optional">(only needed for gated decks)</span></label>
-      <input
-        id="email" name="email" type="email"
-        placeholder="you@company.com"
-      />
+    {% else %}
+      <p class="subtitle">Paste a DocSend link to download it as a PDF.</p>
+      <form id="form">
+        <input type="hidden" name="access_code" value="{{ access_code }}" />
 
-      <label for="filename">File name <span class="optional">(optional — defaults to the deck's title)</span></label>
-      <input
-        id="filename" name="filename" type="text"
-        placeholder="e.g. Acme Seed Deck"
-      />
+        <label for="url">DocSend URL</label>
+        <input id="url" name="url" type="url" required
+               placeholder="https://docsend.com/view/abc123xyz" />
 
-      <button type="submit" id="btn">Download PDF</button>
-    </form>
+        <label for="email">Email <span class="optional">(only needed for gated decks)</span></label>
+        <input id="email" name="email" type="email"
+               placeholder="you@company.com" />
 
-    <div class="status" id="status"></div>
-  </div>
+        <label for="filename">File name <span class="optional">(optional — defaults to the deck's title)</span></label>
+        <input id="filename" name="filename" type="text"
+               placeholder="e.g. Acme Seed Deck" />
 
-  <script>
-    const form = document.getElementById("form");
-    const btn  = document.getElementById("btn");
-    const status = document.getElementById("status");
+        <button type="submit" id="btn">Download PDF</button>
+      </form>
+      <div class="status" id="status"></div>
 
-    form.addEventListener("submit", async (e) => {
-      e.preventDefault();
-      btn.disabled = true;
-      btn.textContent = "Working…";
-      status.className = "status loading";
-      status.innerHTML = '<span class="spinner"></span>Capturing slides — this can take 1–2 minutes for large decks…';
+      <script>
+        const form = document.getElementById("form");
+        const btn  = document.getElementById("btn");
+        const status = document.getElementById("status");
 
-      try {
-        const res = await fetch("/scrape", { method: "POST", body: new FormData(form) });
-        if (!res.ok) {
-          const msg = await res.text();
-          status.className = "status error";
-          status.textContent = "Error: " + msg;
-        } else {
-          const blob = await res.blob();
-          const name = res.headers.get("X-Download-Filename") || "deck.pdf";
-          const a = document.createElement("a");
-          a.href = URL.createObjectURL(blob);
-          a.download = name;
-          a.click();
+        form.addEventListener("submit", async (e) => {
+          e.preventDefault();
+          btn.disabled = true;
+          btn.textContent = "Working…";
           status.className = "status loading";
-          status.innerHTML = "Done! Downloaded as <strong>" + name + "</strong>.";
-        }
-      } catch (err) {
-        status.className = "status error";
-        status.textContent = "Request failed: " + err.message;
-      } finally {
-        btn.disabled = false;
-        btn.textContent = "Download PDF";
-      }
-    });
-  </script>
+          status.innerHTML = '<span class="spinner"></span>Capturing slides — this can take 1–2 minutes for large decks…';
+
+          try {
+            const res = await fetch("/scrape", { method: "POST", body: new FormData(form) });
+            if (!res.ok) {
+              const msg = await res.text();
+              status.className = "status error";
+              status.textContent = "Error: " + msg;
+            } else {
+              const blob = await res.blob();
+              const name = res.headers.get("X-Download-Filename") || "deck.pdf";
+              const a = document.createElement("a");
+              a.href = URL.createObjectURL(blob);
+              a.download = name;
+              a.click();
+              status.className = "status loading";
+              status.innerHTML = "Done! Downloaded as <strong>" + name + "</strong>.";
+            }
+          } catch (err) {
+            status.className = "status error";
+            status.textContent = "Request failed: " + err.message;
+          } finally {
+            btn.disabled = false;
+            btn.textContent = "Download PDF";
+          }
+        });
+      </script>
+    {% endif %}
+  </div>
 </body>
 </html>
