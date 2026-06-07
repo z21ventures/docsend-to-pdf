@@ -344,8 +344,8 @@ class DocSendScraper:
             pass
         await page.wait_for_timeout(3_000)
 
-        # Click the body to give keyboard focus to the presentation viewer
-        await page.mouse.click(720, 500)
+        # Click toolbar area to give keyboard focus without hitting slide content
+        await page.mouse.click(720, 30)
         await page.wait_for_timeout(500)
 
         print(f"Email gate cleared ({email})")
@@ -522,8 +522,9 @@ class DocSendScraper:
         """Go to next slide. Returns True if next button is disabled (end of deck)."""
         page = self.page
 
-        # Ensure the presentation body has keyboard focus
-        await page.mouse.click(720, 500)
+        # Click the toolbar area (top of page) to set focus without hitting
+        # embedded iframes like YouTube videos which steal keyboard focus
+        await page.mouse.click(720, 30)
         await page.wait_for_timeout(200)
 
         # DocSend toolbar uses right-arrow SVG button; try known selectors first

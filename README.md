@@ -10,7 +10,7 @@ Converts any DocSend link into a downloadable PDF in under a minute. Z21 uses it
 
 Founders routinely share decks as DocSend links. Those links expire, track views, and block downloads. This tool bypasses the restriction by loading each slide in a headless browser, capturing the slide images directly from DocSend's CDN, and stitching them into a single PDF.
 
-Run it whenever you receive a DocSend link worth keeping. The output is a single file named `deck.pdf` that downloads straight to your browser.
+Run it whenever you receive a DocSend link worth keeping. The output is a single PDF — named after the deck's own title by default, or whatever file name you enter — that downloads straight to your browser.
 
 ---
 
@@ -18,13 +18,14 @@ Run it whenever you receive a DocSend link worth keeping. The output is a single
 
 No installation required. The tool runs as a hosted web app.
 
-1. Open [https://uditbatish-docsend-to-pdf.hf.space](https://uditbatish-docsend-to-pdf.hf.space)
-2. Enter the access code: **z212026**
+1. Open [https://z21ventures-docsend-to-pdf-new.hf.space](https://z21ventures-docsend-to-pdf-new.hf.space) (you must be signed into Hugging Face as a `z21ventures` org member — the Space is private)
+2. Enter the access code (ask the Z21 team; it's configured as the `ACCESS_CODE` secret on the Space)
 3. Paste the DocSend URL into the **DocSend URL** field
 4. If the deck requires an email to view, enter your Z21 work email in the **Email** field
-5. Click **Download PDF**
-6. Wait 30–60 seconds while the slides are captured (longer decks can take up to 2 minutes)
-7. The file `deck.pdf` downloads automatically when done
+5. *(Optional)* Set a **File name** — leave blank to auto-name the PDF after the deck's own title
+6. Click **Download PDF**
+7. Wait 30–60 seconds while the slides are captured (longer decks can take up to 2 minutes)
+8. The PDF downloads automatically when done
 
 > **Keep the URL and access code internal. Do not share outside the Z21 team.**
 
@@ -32,7 +33,7 @@ No installation required. The tool runs as a hosted web app.
 
 ## Step 2: Finalising and Uploading
 
-Rename the downloaded `deck.pdf` to something descriptive before saving:
+Use the **File name** field (or rename afterwards) so the saved PDF is descriptive:
 
 ```
 [Company Name] - [Round] - [YYYY-MM].pdf
@@ -59,7 +60,7 @@ Some DocSend decks use a non-standard viewer that the scraper can't intercept fr
 DocSend may have updated its front-end. File a bug at [github.com/z21ventures/docsend-to-pdf](https://github.com/z21ventures/docsend-to-pdf) with the failing URL (redact if sensitive).
 
 **The access code is rejected**
-The code rotates annually. The current code for 2026 is `z212026`. If it stops working, contact Udit for the updated code.
+The code is set as the `ACCESS_CODE` secret on the Space (Settings → Variables and secrets). Ask the Z21 team for the current value, or update the secret if you manage the Space.
 
 ---
 
